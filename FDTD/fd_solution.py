@@ -7,6 +7,7 @@ Zachary Hayden
 """
 
 import itertools
+import functools
 from pathlib import Path
 import os
 from datetime import datetime
@@ -93,6 +94,14 @@ def apply_by_mesh(
     flag_matrix[y_grid, x_grid] = stencil_names[stencil]
 
 
+def excitation_constant(**kwargs):
+    return kwargs["constant"]
+
+
+def excitation_variable(**kwargs):
+    return kwargs["variable"]
+
+
 # TODO: I want to find a convenient way to loop through the test params specified in the homework
 if __name__ == "__main__":
     """Setup output file directory"""
@@ -129,12 +138,19 @@ if __name__ == "__main__":
         np.array([[-1, +1], [-1, +1]]),
         np.array([[-1, +1], [-1, +1]]),
     ]
+    # excitations = [
+    #     functools.partial(excitation_constant, constant=0),
+    #     functools.partial(excitation_constant, constant=0),
+    #     functools.partial(excitation_constant, constant=1),
+    #     functools.partial(excitation_constant, constant=0),
+    #     functools.partial(excitation_constant, constant=0),
+    # ]
     excitations = [
-        0,
-        0,
-        1,
-        0,
-        0,
+        functools.partial(excitation_constant, constant=0),
+        functools.partial(excitation_constant, constant=0),
+        excitation_variable,
+        functools.partial(excitation_constant, constant=0),
+        functools.partial(excitation_constant, constant=0),
     ]
     """Loop through limits and step sizes (each combination has a unique mesh)"""
     step_sizes = [0.1, 0.05]
@@ -277,6 +293,7 @@ if __name__ == "__main__":
                 flag_matrix=flag_matrix,
                 index_matrix=index_matrix,
                 excitations=excitations,
+                excitation_kwargs={"variable": 1.0},
                 domain_indices=[
                     np.arange(0, n_rows, 1),
                     np.arange(0, n_cols, 1),

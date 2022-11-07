@@ -80,13 +80,13 @@ def apply_excitation_new(
     excitation_vector: np.ndarray,
     flag_matrix: np.ndarray,
     index_matrix: np.ndarray,
-    excitations: List[np.ndarray],  # assume each stencil has the correct dimensions
+    excitations: List[callable],
+    excitation_kwargs: dict,
     domain_indices: List[np.ndarray],
 ) -> None:
     """Adds stencils to the system matrix. stencils may have arbitrary shape"""
-    # NOTE stencils CANNOT be a ndarray. it must be a list of ndarrays to allow for arbitrary dimensions
-    excitations = [np.array(idx) for idx in excitations]
-    # TODO: the preceding should be handled at the level above. do we need these checks?
+    # NOTE: excitation callables take *args and **kwargs arguments, provided for each run
+
     # force each dimension to have an ndarray of indices
     domain_indices = [np.atleast_1d(idx) for idx in domain_indices]
 
@@ -94,7 +94,9 @@ def apply_excitation_new(
     apply_points = itertools.product(*tuple(domain_indices))
     for point in apply_points:
         # apply appropriate excitation
-        excitation_vector[index_matrix[point]] = excitations[flag_matrix[point]]
+        excitation_vector[index_matrix[point]] = excitations[flag_matrix[point]](
+            **excitation_kwargs
+        )
 
 
 #%% define generic stencils
