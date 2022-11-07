@@ -83,6 +83,7 @@ def apply_excitation_new(
     excitations: List[callable],
     excitation_kwargs: dict,
     domain_indices: List[np.ndarray],
+    pre_calculate: bool = True,  # assumes most excitation vectors will be large relative to list of all excitations
 ) -> None:
     """Adds stencils to the system matrix. stencils may have arbitrary shape"""
     # NOTE: excitation callables take *args and **kwargs arguments, provided for each run
@@ -90,13 +91,26 @@ def apply_excitation_new(
     # force each dimension to have an ndarray of indices
     domain_indices = [np.atleast_1d(idx) for idx in domain_indices]
 
+    # pre-calculate all excitation values, to potentially save on execution time
+    if pre_calculate is True:
+        excitation_values = [
+            excitation_func(**excitation_kwargs) for excitation_func in excitations
+        ]
+
     # I'd love to do this in numpy indexing, but this way is a lot clearer
     apply_points = itertools.product(*tuple(domain_indices))
     for point in apply_points:
         # apply appropriate excitation
-        excitation_vector[index_matrix[point]] = excitations[flag_matrix[point]](
-            **excitation_kwargs
-        )
+        if pre_calculate is False:
+            # call the function during assignment
+            excitation_vector[index_matrix[point]] = excitations[flag_matrix[point]](
+                **excitation_kwargs
+            )
+        else:
+            # used the cached result
+            excitation_vector[index_matrix[point]] = excitation_values[
+                flag_matrix[point]
+            ]
 
 
 #%% define generic stencils
