@@ -92,6 +92,7 @@ def apply_excitation_new(
     domain_indices = [np.atleast_1d(idx) for idx in domain_indices]
 
     # pre-calculate all excitation values, to potentially save on execution time
+    # NOTE: this is incompatible with spatially-varying excitations. I may need to remove this in the future
     if pre_calculate is True:
         excitation_values = [
             excitation_func(**excitation_kwargs) for excitation_func in excitations
