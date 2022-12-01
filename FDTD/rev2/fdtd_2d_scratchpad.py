@@ -15,11 +15,11 @@ ey_const_extents = np.array([[0, 0], [0, 0], [0, 0], [0, 0]])
 hz_const_stencil = np.array([[[[0]]]])
 hz_const_extents = np.array([[0, 0], [0, 0], [0, 0], [0, 0]])
 
-ex_free_stencil = np.array([[[[-1]], [[1]]]])
+ex_free_stencil = np.array([[[[-0.5]], [[0.5]]]])
 ex_free_extents = np.array([[0, 0], [-1, 0], [0, 0], [0, 0]])
-ey_free_stencil = np.array([[[[1], [-1]]]])
-ey_free_extents = np.array([[0, 0], [0, 0], [-1, 0], [0, 0]])
-hz_free_stencil = np.array([[[[0, 0], [-1, 0]], [[0, 1], [1, -1]]]])
+ey_free_stencil = np.array([[[[0.5], [-0.5]]]])
+ey_free_extents = np.array([[0, 0], [0, 0], [-1, 0], [-1, -1]])
+hz_free_stencil = np.array([[[[0, 0], [-0.5, 0]], [[0, 0.5], [0.5, -0.5]]]])
 hz_free_extents = np.array([[0, 0], [-1, 0], [-1, 0], [0, 1]])
 
 stencil_list = [
@@ -56,7 +56,9 @@ X_NPOINTS = 16
 Y_NPOINTS = 16
 Z_NPOINTS = 1
 E_COMPONENTS = 2
+E_TOTAL = X_NPOINTS * Y_NPOINTS * Z_NPOINTS * E_COMPONENTS
 H_COMPONENTS = 1
+H_TOTAL = X_NPOINTS * Y_NPOINTS * Z_NPOINTS * H_COMPONENTS
 
 e_shape = (Z_NPOINTS, Y_NPOINTS, X_NPOINTS, E_COMPONENTS)
 h_shape = (Z_NPOINTS, Y_NPOINTS, X_NPOINTS, H_COMPONENTS)
@@ -81,16 +83,16 @@ e_fields = np.zeros(e_shape, dtype=float)
 h_fields = np.zeros(h_shape, dtype=float)
 
 e_lossless = [
-    np.ones(e_shape, dtype=float).reshape((512, 1)),
-    np.zeros(e_shape, dtype=float).reshape((512, 1)),
+    np.ones(e_shape, dtype=float).reshape((E_TOTAL, 1)),
+    np.zeros(e_shape, dtype=float).reshape((E_TOTAL, 1)),
 ]
 h_lossless = [
-    np.ones(h_shape, dtype=float).reshape((256, 1)),
-    np.zeros(h_shape, dtype=float).reshape((256, 1)),
+    np.ones(h_shape, dtype=float).reshape((H_TOTAL, 1)),
+    np.zeros(h_shape, dtype=float).reshape((H_TOTAL, 1)),
 ]
 
 e_sources = np.zeros(e_shape, dtype=float)
-e_sources[0, 8, 8, 0] = 1.0
+e_sources[0, int(Y_NPOINTS / 2), int(X_NPOINTS / 2), 0] = 1.0
 h_sources = np.zeros(h_shape, dtype=float)
 
 #%% apply flags manually for now
@@ -164,7 +166,7 @@ for i in range(32):
     # TODO: subplots
     plt.figure()
     plt.pcolormesh(
-        e_field_vector.reshape(16, 16, 2)[:, :, 0],
+        e_field_vector.reshape(1, 16, 16, 2)[0, :, :, 0],
         cmap=plt.cm.turbo,
         vmin=-2.0,
         vmax=2.0,
@@ -173,7 +175,7 @@ for i in range(32):
     plt.title(f"Ex Fields")
     plt.figure()
     plt.pcolormesh(
-        e_field_vector.reshape(16, 16, 2)[:, :, 1],
+        e_field_vector.reshape(1, 16, 16, 2)[0, :, :, 1],
         cmap=plt.cm.turbo,
         vmin=-2.0,
         vmax=2.0,
@@ -182,7 +184,7 @@ for i in range(32):
     plt.title(f"Ey Fields")
     plt.figure()
     plt.pcolormesh(
-        h_field_vector.reshape(16, 16)[:, :],
+        h_field_vector.reshape(1, 16, 16, 1)[0, :, :, 0],
         cmap=plt.cm.turbo,
         vmin=-2.0,
         vmax=2.0,
