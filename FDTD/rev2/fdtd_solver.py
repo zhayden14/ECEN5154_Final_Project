@@ -11,8 +11,8 @@ def step(
     update_e: np.ndarray,
     source_h: np.ndarray,
     source_e: np.ndarray,
-    loss_h: List[np.ndarray, np.ndarray],
-    loss_e: List[np.ndarray, np.ndarray],
+    loss_h: List[np.ndarray],
+    loss_e: List[np.ndarray],
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     TODO: docstring
