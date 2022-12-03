@@ -2,7 +2,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-import fd_lib, fdtd_solver
+import fd_lib, fdtd_solver, misc
 
 
 # %% basic stencils
@@ -79,16 +79,19 @@ h_flag_matrix = np.zeros(h_shape, dtype=int)
 
 """physical values (more or less)"""
 e_fields = np.zeros(e_shape, dtype=float)
-# e_fields[0, 8, 8, 0] = 1.0
+# e_fields = misc.generate_gradient(e_shape, (0, 0, 1, 0))
+# e_fields[0, 8, 8, :] = 1.0
 h_fields = np.zeros(h_shape, dtype=float)
+# h_fields = misc.generate_gradient(h_shape, (0, 0, 2, 0))
+# h_fields[0, 8, 8, 0] = 1.0
 
 e_lossless = [
     np.ones(e_shape, dtype=float).reshape((E_TOTAL, 1)),
-    np.zeros(e_shape, dtype=float).reshape((E_TOTAL, 1)),
+    np.ones(e_shape, dtype=float).reshape((E_TOTAL, 1)),
 ]
 h_lossless = [
     np.ones(h_shape, dtype=float).reshape((H_TOTAL, 1)),
-    np.zeros(h_shape, dtype=float).reshape((H_TOTAL, 1)),
+    np.ones(h_shape, dtype=float).reshape((H_TOTAL, 1)),
 ]
 
 e_sources = np.zeros(e_shape, dtype=float)
@@ -164,33 +167,66 @@ for i in range(32):
         loss_e=e_lossless,
     )
     # TODO: subplots
-    plt.figure()
-    plt.pcolormesh(
+    fig, axes = plt.subplots(2, 2)
+    # Ex
+    ax = axes[0, 0]
+    pcm = ax.pcolormesh(
         e_field_vector.reshape(1, 16, 16, 2)[0, :, :, 0],
         cmap=plt.cm.turbo,
         vmin=-2.0,
         vmax=2.0,
     )
-    plt.colorbar()
-    plt.title(f"Ex Fields")
-    plt.figure()
-    plt.pcolormesh(
+    fig.colorbar(pcm, ax=ax)
+    ax.set_title(f"Ex Fields")
+    # Ey
+    ax = axes[0, 1]
+    pcm = ax.pcolormesh(
         e_field_vector.reshape(1, 16, 16, 2)[0, :, :, 1],
         cmap=plt.cm.turbo,
         vmin=-2.0,
         vmax=2.0,
     )
-    plt.colorbar()
-    plt.title(f"Ey Fields")
-    plt.figure()
-    plt.pcolormesh(
+    fig.colorbar(pcm, ax=ax)
+    ax.set_title(f"Ey Fields")
+    # Hz
+    ax = axes[1, 0]
+    pcm = ax.pcolormesh(
         h_field_vector.reshape(1, 16, 16, 1)[0, :, :, 0],
         cmap=plt.cm.turbo,
         vmin=-2.0,
         vmax=2.0,
     )
-    plt.colorbar()
-    plt.title(f"Hz Fields")
+    fig.colorbar(pcm, ax=ax)
+    ax.set_title(f"Hz Fields")
     plt.show()
+
+    # plt.figure()
+    # plt.pcolormesh(
+    #     e_field_vector.reshape(1, 16, 16, 2)[0, :, :, 0],
+    #     cmap=plt.cm.turbo,
+    #     vmin=-2.0,
+    #     vmax=2.0,
+    # )
+    # plt.colorbar()
+    # plt.title(f"Ex Fields")
+    # plt.figure()
+    # plt.pcolormesh(
+    #     e_field_vector.reshape(1, 16, 16, 2)[0, :, :, 1],
+    #     cmap=plt.cm.turbo,
+    #     vmin=-2.0,
+    #     vmax=2.0,
+    # )
+    # plt.colorbar()
+    # plt.title(f"Ey Fields")
+    # plt.figure()
+    # plt.pcolormesh(
+    #     h_field_vector.reshape(1, 16, 16, 1)[0, :, :, 0],
+    #     cmap=plt.cm.turbo,
+    #     vmin=-2.0,
+    #     vmax=2.0,
+    # )
+    # plt.colorbar()
+    # plt.title(f"Hz Fields")
+    # plt.show()
 
 # %%
