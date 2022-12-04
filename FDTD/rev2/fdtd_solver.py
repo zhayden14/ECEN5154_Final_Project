@@ -34,16 +34,17 @@ def step(
 
     """propagate solution"""
     # calculate dH/dt
-    delta_h = update_h @ previous_e
+    # TODO: these constants should be part of the loss calculation
+    delta_h = (update_h @ previous_e) / 1e1
     # apply magnetic currents (sources)
     delta_h += source_h
     # update h (with loss: see notes)
     new_h = loss_h[0] * delta_h + loss_h[1] * previous_h
     # calculate dE/dt
-    delta_e = update_e @ new_h
+    delta_e = (update_e @ new_h) / 5e1
     # apply electric currents (sources)
     delta_e += source_e
     # update e (with loss: see notes)
     new_e = loss_e[0] * delta_e + loss_e[1] * previous_e
 
-    return new_h, new_e
+    return new_h, new_e, delta_h, delta_e

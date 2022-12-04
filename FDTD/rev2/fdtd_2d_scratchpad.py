@@ -1,6 +1,9 @@
 #%% imports
+from functools import partial
+
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
 
 import fd_lib, fdtd_solver, misc
 
@@ -16,11 +19,11 @@ hz_const_stencil = np.array([[[[0]]]])
 hz_const_extents = np.array([[0, 0], [0, 0], [0, 0], [0, 0]])
 
 ex_free_stencil = np.array([[[[-0.5]], [[0.5]]]])
-ex_free_extents = np.array([[0, 0], [-1, 0], [0, 0], [0, 0]])
+ex_free_extents = np.array([[0, 0], [0, 1], [0, 0], [0, 0]])
 ey_free_stencil = np.array([[[[0.5], [-0.5]]]])
 ey_free_extents = np.array([[0, 0], [0, 0], [-1, 0], [-1, -1]])
 hz_free_stencil = np.array([[[[0, 0], [-0.5, 0]], [[0, 0.5], [0.5, -0.5]]]])
-hz_free_extents = np.array([[0, 0], [-1, 0], [-1, 0], [0, 1]])
+hz_free_extents = np.array([[0, 0], [-1, 0], [0, 1], [0, 1]])
 
 stencil_list = [
     ex_const_stencil,
@@ -95,7 +98,10 @@ h_lossless = [
 ]
 
 e_sources = np.zeros(e_shape, dtype=float)
-e_sources[0, int(Y_NPOINTS / 2), int(X_NPOINTS / 2), 0] = 1.0
+# e_sources[0, int(Y_NPOINTS / 2), 4:12, 0] = 1.0
+e_sources[0, :, int(X_NPOINTS / 2), 1] = 1.0
+# e_sources[0, int(Y_NPOINTS / 2), int(X_NPOINTS / 2), 0] = 1.0
+# e_sources[0, int(Y_NPOINTS / 2), int(X_NPOINTS / 2) + 1, 0] = -1.0
 h_sources = np.zeros(h_shape, dtype=float)
 
 #%% apply flags manually for now
@@ -154,9 +160,18 @@ e_field_vector = e_fields.reshape((512, 1))
 h_field_vector = h_fields.reshape((256, 1))
 e_sources_amp_vector = e_sources.reshape((512, 1))
 h_sources_vector = h_sources.reshape((256, 1))
-for i in range(32):
-    e_sources_vector = e_sources_amp_vector * np.sin(np.pi / 8 * i)
-    h_field_vector, e_field_vector = fdtd_solver.step(
+e_data_vector = []
+h_data_vector = []
+e_data_delta = []
+h_data_delta = []
+
+for i in range(128):
+    # def update(i):
+    if i < 33:
+        e_sources_vector = e_sources_amp_vector * np.sin(np.pi / 8 * i)
+    else:
+        e_sources_vector = np.zeros_like(e_sources_vector)
+    h_field_vector, e_field_vector, h_delta, e_delta = fdtd_solver.step(
         previous_h=h_field_vector,
         previous_e=e_field_vector,
         update_h=h_system_matrix,
@@ -166,39 +181,74 @@ for i in range(32):
         loss_h=h_lossless,
         loss_e=e_lossless,
     )
-    # TODO: subplots
-    fig, axes = plt.subplots(2, 2)
-    # Ex
+    e_data_vector.append(e_field_vector)
+    h_data_vector.append(h_field_vector)
+    e_data_delta.append(e_delta)
+    h_data_delta.append(h_delta)
+fig, axes = plt.subplots(2, 3)
+# fig, axes = plt.subplots(2, 3)
+# Ex
+def update(e_data_vector, h_data_vector, e_data_delta, h_data_delta, i):
     ax = axes[0, 0]
     pcm = ax.pcolormesh(
-        e_field_vector.reshape(1, 16, 16, 2)[0, :, :, 0],
+        e_data_vector[i % 128].reshape(1, 16, 16, 2)[0, :, :, 0],
         cmap=plt.cm.turbo,
         vmin=-2.0,
         vmax=2.0,
     )
-    fig.colorbar(pcm, ax=ax)
+    # fig.colorbar(pcm, ax=ax)
     ax.set_title(f"Ex Fields")
     # Ey
     ax = axes[0, 1]
     pcm = ax.pcolormesh(
-        e_field_vector.reshape(1, 16, 16, 2)[0, :, :, 1],
+        e_data_vector[i % 128].reshape(1, 16, 16, 2)[0, :, :, 1],
         cmap=plt.cm.turbo,
         vmin=-2.0,
         vmax=2.0,
     )
-    fig.colorbar(pcm, ax=ax)
+    # fig.colorbar(pcm, ax=ax)
     ax.set_title(f"Ey Fields")
     # Hz
-    ax = axes[1, 0]
+    ax = axes[0, 2]
     pcm = ax.pcolormesh(
-        h_field_vector.reshape(1, 16, 16, 1)[0, :, :, 0],
+        h_data_vector[i % 128].reshape(1, 16, 16, 1)[0, :, :, 0],
         cmap=plt.cm.turbo,
         vmin=-2.0,
         vmax=2.0,
     )
-    fig.colorbar(pcm, ax=ax)
+    # fig.colorbar(pcm, ax=ax)
     ax.set_title(f"Hz Fields")
-    plt.show()
+    # Ex
+    ax = axes[1, 0]
+    pcm = ax.pcolormesh(
+        e_data_delta[i % 128].reshape(1, 16, 16, 2)[0, :, :, 0],
+        cmap=plt.cm.turbo,
+        vmin=-2.0,
+        vmax=2.0,
+    )
+    # fig.colorbar(pcm, ax=ax)
+    ax.set_title(f"Ex Delta")
+    # Ey
+    ax = axes[1, 1]
+    pcm = ax.pcolormesh(
+        e_data_delta[i % 128].reshape(1, 16, 16, 2)[0, :, :, 1],
+        cmap=plt.cm.turbo,
+        vmin=-2.0,
+        vmax=2.0,
+    )
+    # fig.colorbar(pcm, ax=ax)
+    ax.set_title(f"Ey Delta")
+    # Hz
+    ax = axes[1, 2]
+    pcm = ax.pcolormesh(
+        h_data_delta[i % 128].reshape(1, 16, 16, 1)[0, :, :, 0],
+        cmap=plt.cm.turbo,
+        vmin=-2.0,
+        vmax=2.0,
+    )
+    # fig.colorbar(pcm, ax=ax)
+    ax.set_title(f"Hz Delta")
+    # plt.show()
 
     # plt.figure()
     # plt.pcolormesh(
@@ -228,5 +278,15 @@ for i in range(32):
     # plt.colorbar()
     # plt.title(f"Hz Fields")
     # plt.show()
+
+
+animation = FuncAnimation(
+    fig,
+    partial(update, e_data_vector, h_data_vector, e_data_delta, h_data_delta),
+    interval=100,
+    frames=128,
+    repeat=True,
+)
+plt.show()
 
 # %%
