@@ -99,7 +99,7 @@ h_lossless = [
 
 e_sources = np.zeros(e_shape, dtype=float)
 # e_sources[0, int(Y_NPOINTS / 2), 4:12, 0] = 1.0
-e_sources[0, :, int(X_NPOINTS / 2), 1] = 1.0
+e_sources[0, :, 4, 1] = 1.0
 # e_sources[0, int(Y_NPOINTS / 2), int(X_NPOINTS / 2), 0] = 1.0
 # e_sources[0, int(Y_NPOINTS / 2), int(X_NPOINTS / 2) + 1, 0] = -1.0
 h_sources = np.zeros(h_shape, dtype=float)
