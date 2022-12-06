@@ -31,11 +31,11 @@ def stencils_2d_free_space():
         "ex_pec_border": {"points": [(0, 0, 0, 0)], "values": [0.0]},
         # apply programmatically to Ey when node @-x is PEC
         "ey_pec_border": {"points": [(0, 0, 0, 0)], "values": [0.0]},
-        "ex_free": {"points": [(0, 0, 0, 0), (0, -1, 0, 0)], "values": [0.5, -0.5]},
-        "ey_free": {"points": [(0, 0, 0, -1), (0, 0, -1, -1)], "values": [-0.5, 0.5]},
+        "ex_free": {"points": [(0, 0, 0, 0), (0, -1, 0, 0)], "values": [1, -1]},
+        "ey_free": {"points": [(0, 0, 0, -1), (0, 0, -1, -1)], "values": [-1, 1]},
         "hz_free": {
             "points": [(0, 1, 0, 0), (0, 0, 0, 0), (0, 0, 1, 1), (0, 0, 0, 1)],
-            "values": [0.5, -0.5, -0.5, 0.5],
+            "values": [1, -1, -1, 1],
         },
     }
     names = []
@@ -55,9 +55,10 @@ def stencils_2d_free_space():
 def stencils_1d():
     definition = {
         "pec": {"points": [(0, 0, 0, 0)], "values": [0.0]},
-        "abc_1d_hz": {"points": [(0, -1, 0, 0)], "values": [1.0]},
-        "ex_free": {"points": [(0, 0, 0, 0), (0, -1, 0, 0)], "values": [-0.5, 0.5]},
-        "hz_free": {"points": [(0, 1, 0, 0), (0, 0, 0, 0)], "values": [0.5, -0.5]},
+        "abc_1d_ex": {"points": [(0, 1, 0, 0), (0, 0, 0, 0)], "values": [1, -1]},
+        "abc_1d_hz": {"points": [(0, 0, 0, 0), (0, -1, 0, 0)], "values": [1, -1]},
+        "ex_free": {"points": [(0, 0, 0, 0), (0, -1, 0, 0)], "values": [1, -1]},
+        "hz_free": {"points": [(0, 1, 0, 0), (0, 0, 0, 0)], "values": [1, -1]},
     }
     names = []
     stencils = []
@@ -72,20 +73,5 @@ def stencils_1d():
 
     return names, stencils, extents
 
-
-# %% old stencils
-ex_const_stencil = np.array([[[[0]]]])
-ex_const_extents = np.array([[0, 0], [0, 0], [0, 0], [0, 0]])
-ey_const_stencil = np.array([[[[0]]]])
-ey_const_extents = np.array([[0, 0], [0, 0], [0, 0], [0, 0]])
-hz_const_stencil = np.array([[[[0]]]])
-hz_const_extents = np.array([[0, 0], [0, 0], [0, 0], [0, 0]])
-
-ex_free_stencil = np.array([[[[-0.5]], [[0.5]]]])
-ex_free_extents = np.array([[0, 0], [0, 1], [0, 0], [0, 0]])
-ey_free_stencil = np.array([[[[0.5], [-0.5]]]])
-ey_free_extents = np.array([[0, 0], [0, 0], [-1, 0], [-1, -1]])
-hz_free_stencil = np.array([[[[0, 0], [-0.5, 0]], [[0, 0.5], [0.5, -0.5]]]])
-hz_free_extents = np.array([[0, 0], [-1, 0], [0, 1], [0, 1]])
 
 # %%

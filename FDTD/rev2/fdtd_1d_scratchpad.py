@@ -9,7 +9,7 @@ import fd_lib, fdtd_solver, misc, fd_stencils
 
 
 #%% use new stencil capabilities
-names, stencil_list, extent_list = fd_stencils.stencils_1d_free_space()
+names, stencil_list, extent_list = fd_stencils.stencils_1d()
 stencil_names = {f"{names[i]}": i for i in range(len(names))}
 
 #%% start setting up variables
@@ -17,8 +17,8 @@ stencil_names = {f"{names[i]}": i for i in range(len(names))}
 
 # TODO: parameterize e and h shape?
 
-X_NPOINTS = 16
-Y_NPOINTS = 1
+X_NPOINTS = 1
+Y_NPOINTS = 64
 Z_NPOINTS = 1
 E_COMPONENTS = 1
 E_TOTAL = X_NPOINTS * Y_NPOINTS * Z_NPOINTS * E_COMPONENTS
@@ -60,29 +60,15 @@ h_lossless = [
 ]
 
 e_sources = np.zeros(e_shape, dtype=float)
-# e_sources[0, int(Y_NPOINTS / 2), 4:12, 0] = 1.0
-# e_sources[0, :, 4, 0] = 1.0
-e_sources[0, int(Y_NPOINTS / 2), int(X_NPOINTS / 2), 0] = 1.0
-# e_sources[0, int(Y_NPOINTS / 2), int(X_NPOINTS / 2) + 1, 0] = -1.0
+e_sources[0, 31, 0, 0] = 1.00
 h_sources = np.zeros(h_shape, dtype=float)
 
 #%% apply flags manually for now
-e_flag_matrix[0, :, :, 0] = stencil_names["ex_free"]
-e_flag_matrix[0, :, :, 1] = stencil_names["ey_free"]
-e_flag_matrix[0, 0, :, 0] = stencil_names["pec"]
-e_flag_matrix[0, -1, :, 0] = stencil_names["pec"]
-e_flag_matrix[0, :, 0, 0] = stencil_names["pec"]
-e_flag_matrix[0, :, -1, 0] = stencil_names["pec"]
-e_flag_matrix[0, 0, :, 1] = stencil_names["pec"]
-e_flag_matrix[0, -1, :, 1] = stencil_names["pec"]
-e_flag_matrix[0, :, 0, 1] = stencil_names["pec"]
-e_flag_matrix[0, :, -1, 1] = stencil_names["pec"]
+e_flag_matrix[0, :, 0, 0] = stencil_names["ex_free"]
+e_flag_matrix[0, 0, 0, 0] = stencil_names["abc_1d_ex"]
 
-h_flag_matrix[0, :, :, 0] = stencil_names["hz_free"]
-h_flag_matrix[0, 0, :, 0] = stencil_names["pec"]
-h_flag_matrix[0, -1, :, 0] = stencil_names["pec"]
-h_flag_matrix[0, :, 0, 0] = stencil_names["pec"]
-h_flag_matrix[0, :, -1, 0] = stencil_names["pec"]
+h_flag_matrix[0, :, 0, 0] = stencil_names["hz_free"]
+h_flag_matrix[0, -1, 0, 0] = stencil_names["abc_1d_hz"]
 
 # %% fill system matrices
 # E-field
@@ -117,11 +103,10 @@ fd_lib.apply_stencil(
 )
 
 # %%
-# TODO: make this programmatic
-e_field_vector = e_fields.reshape((512, 1))
-h_field_vector = h_fields.reshape((256, 1))
-e_sources_amp_vector = e_sources.reshape((512, 1))
-h_sources_vector = h_sources.reshape((256, 1))
+e_field_vector = e_fields.reshape((E_TOTAL, 1))
+h_field_vector = h_fields.reshape((H_TOTAL, 1))
+e_sources_amp_vector = e_sources.reshape((E_TOTAL, 1))
+h_sources_vector = h_sources.reshape((H_TOTAL, 1))
 e_data_vector = []
 h_data_vector = []
 e_data_delta = []
@@ -129,8 +114,8 @@ h_data_delta = []
 
 for i in range(128):
     # def update(i):
-    if i < 33:
-        e_sources_vector = e_sources_amp_vector * np.sin(np.pi / 8 * i)
+    if i < 17:
+        e_sources_vector = e_sources_amp_vector * np.sin(np.pi / 8 * i) * 0.5
     else:
         e_sources_vector = np.zeros_like(e_sources_vector)
     h_field_vector, e_field_vector, h_delta, e_delta = fdtd_solver.step(
@@ -147,33 +132,26 @@ for i in range(128):
     h_data_vector.append(h_field_vector)
     e_data_delta.append(e_delta)
     h_data_delta.append(h_delta)
-fig, axes = plt.subplots(2, 3)
-# fig, axes = plt.subplots(2, 3)
+fig, axes = plt.subplots(2, 2)
 # Ex
 def update(e_data_vector, h_data_vector, e_data_delta, h_data_delta, i):
     ax = axes[0, 0]
     pcm = ax.pcolormesh(
-        e_data_vector[i % 128].reshape(1, 16, 16, 2)[0, :, :, 0],
+        e_data_vector[i % 128].reshape(Z_NPOINTS, Y_NPOINTS, X_NPOINTS, E_COMPONENTS)[
+            0, :, :, 0
+        ],
         cmap=plt.cm.turbo,
         vmin=-2.0,
         vmax=2.0,
     )
     # fig.colorbar(pcm, ax=ax)
     ax.set_title(f"Ex Fields")
-    # Ey
+    # Hz
     ax = axes[0, 1]
     pcm = ax.pcolormesh(
-        e_data_vector[i % 128].reshape(1, 16, 16, 2)[0, :, :, 1],
-        cmap=plt.cm.turbo,
-        vmin=-2.0,
-        vmax=2.0,
-    )
-    # fig.colorbar(pcm, ax=ax)
-    ax.set_title(f"Ey Fields")
-    # Hz
-    ax = axes[0, 2]
-    pcm = ax.pcolormesh(
-        h_data_vector[i % 128].reshape(1, 16, 16, 1)[0, :, :, 0],
+        h_data_vector[i % 128].reshape(Z_NPOINTS, Y_NPOINTS, X_NPOINTS, H_COMPONENTS)[
+            0, :, :, 0
+        ],
         cmap=plt.cm.turbo,
         vmin=-2.0,
         vmax=2.0,
@@ -183,27 +161,21 @@ def update(e_data_vector, h_data_vector, e_data_delta, h_data_delta, i):
     # Ex
     ax = axes[1, 0]
     pcm = ax.pcolormesh(
-        e_data_delta[i % 128].reshape(1, 16, 16, 2)[0, :, :, 0],
+        e_data_delta[i % 128].reshape(Z_NPOINTS, Y_NPOINTS, X_NPOINTS, E_COMPONENTS)[
+            0, :, :, 0
+        ],
         cmap=plt.cm.turbo,
         vmin=-2.0,
         vmax=2.0,
     )
     # fig.colorbar(pcm, ax=ax)
     ax.set_title(f"Ex Delta")
-    # Ey
+    # Hz
     ax = axes[1, 1]
     pcm = ax.pcolormesh(
-        e_data_delta[i % 128].reshape(1, 16, 16, 2)[0, :, :, 1],
-        cmap=plt.cm.turbo,
-        vmin=-2.0,
-        vmax=2.0,
-    )
-    # fig.colorbar(pcm, ax=ax)
-    ax.set_title(f"Ey Delta")
-    # Hz
-    ax = axes[1, 2]
-    pcm = ax.pcolormesh(
-        h_data_delta[i % 128].reshape(1, 16, 16, 1)[0, :, :, 0],
+        h_data_delta[i % 128].reshape(Z_NPOINTS, Y_NPOINTS, X_NPOINTS, H_COMPONENTS)[
+            0, :, :, 0
+        ],
         cmap=plt.cm.turbo,
         vmin=-2.0,
         vmax=2.0,
@@ -245,7 +217,7 @@ def update(e_data_vector, h_data_vector, e_data_delta, h_data_delta, i):
 animation = FuncAnimation(
     fig,
     partial(update, e_data_vector, h_data_vector, e_data_delta, h_data_delta),
-    interval=100,
+    interval=10,
     frames=128,
     repeat=True,
 )
