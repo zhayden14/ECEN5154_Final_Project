@@ -18,7 +18,7 @@ def points_to_stencil(points: List[tuple], values: List[tuple]):
     stencil = np.zeros(shape=shape)
     # fill the stencil
     for point, value in itertools.zip_longest(points, values):
-        stencil[tuple(point-extent_min)] = value
+        stencil[tuple(point - extent_min)] = value
     # format extents
     extents = np.array([extent_min, extent_max]).transpose()
     return stencil, extents
@@ -26,9 +26,17 @@ def points_to_stencil(points: List[tuple], values: List[tuple]):
 
 def stencils_2d_free_space():
     definition = {
+        "pec": {"points": [(0, 0, 0, 0)], "values": [0.0]},
+        # apply programmatically to Ex when node @-y is PEC
+        "ex_pec_border": {"points": [(0, 0, 0, 0)], "values": [0.0]},
+        # apply programmatically to Ey when node @-x is PEC
+        "ey_pec_border": {"points": [(0, 0, 0, 0)], "values": [0.0]},
         "ex_free": {"points": [(0, 0, 0, 0), (0, 1, 0, 0)], "values": [-0.5, 0.5]},
         "ey_free": {"points": [(0, 0, -1, -1), (0, 0, 0, -1)], "values": [0.5, -0.5]},
-        "hz_free": {"points": [(0, 0, 0, 0), (0, 1, 0, 0), (0, 0, -1, 1), (0, 0, 0, 1)], "values": [-0.5, 0.5, 0.5, -0.5]}
+        "hz_free": {
+            "points": [(0, 0, 0, 0), (0, 1, 0, 0), (0, 0, -1, 1), (0, 0, 0, 1)],
+            "values": [-0.5, 0.5, 0.5, -0.5],
+        },
     }
     names = []
     stencils = []
@@ -36,7 +44,8 @@ def stencils_2d_free_space():
     for name in definition.keys():
         names.append(name)
         stencil, extent = points_to_stencil(
-            definition[name]["points"], definition[name]["values"])
+            definition[name]["points"], definition[name]["values"]
+        )
         stencils.append(stencil)
         extents.append(extent)
 
