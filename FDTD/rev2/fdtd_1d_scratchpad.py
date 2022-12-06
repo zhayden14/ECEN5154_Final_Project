@@ -8,50 +8,8 @@ from matplotlib.animation import FuncAnimation
 import fd_lib, fdtd_solver, misc, fd_stencils
 
 
-# %% basic stencils
-# E-field dimensions: z_dim (1), y_dim, x_dim, component
-
-# ex_const_stencil = np.array([[[[0]]]])
-# ex_const_extents = np.array([[0, 0], [0, 0], [0, 0], [0, 0]])
-# ey_const_stencil = np.array([[[[0]]]])
-# ey_const_extents = np.array([[0, 0], [0, 0], [0, 0], [0, 0]])
-# hz_const_stencil = np.array([[[[0]]]])
-# hz_const_extents = np.array([[0, 0], [0, 0], [0, 0], [0, 0]])
-
-# ex_free_stencil = np.array([[[[-0.5]], [[0.5]]]])
-# ex_free_extents = np.array([[0, 0], [0, 1], [0, 0], [0, 0]])
-# ey_free_stencil = np.array([[[[0.5], [-0.5]]]])
-# ey_free_extents = np.array([[0, 0], [0, 0], [-1, 0], [-1, -1]])
-# hz_free_stencil = np.array([[[[0, 0], [-0.5, 0]], [[0, 0.5], [0.5, -0.5]]]])
-# hz_free_extents = np.array([[0, 0], [-1, 0], [0, 1], [0, 1]])
-
-# stencil_list = [
-#     ex_const_stencil,
-#     ey_const_stencil,
-#     hz_const_stencil,
-#     ex_free_stencil,
-#     ey_free_stencil,
-#     hz_free_stencil,
-# ]
-# extent_list = [
-#     ex_const_extents,
-#     ey_const_extents,
-#     hz_const_extents,
-#     ex_free_extents,
-#     ey_free_extents,
-#     hz_free_extents,
-# ]
-# stencil_names = {
-#     "ex_const": 0,
-#     "ey_const": 1,
-#     "hz_const": 2,
-#     "ex_free": 3,
-#     "ey_free": 4,
-#     "hz_free": 5,
-# }
-
 #%% use new stencil capabilities
-names, stencil_list, extent_list = fd_stencils.stencils_2d_free_space()
+names, stencil_list, extent_list = fd_stencils.stencils_1d_free_space()
 stencil_names = {f"{names[i]}": i for i in range(len(names))}
 
 #%% start setting up variables
@@ -60,9 +18,9 @@ stencil_names = {f"{names[i]}": i for i in range(len(names))}
 # TODO: parameterize e and h shape?
 
 X_NPOINTS = 16
-Y_NPOINTS = 16
+Y_NPOINTS = 1
 Z_NPOINTS = 1
-E_COMPONENTS = 2
+E_COMPONENTS = 1
 E_TOTAL = X_NPOINTS * Y_NPOINTS * Z_NPOINTS * E_COMPONENTS
 H_COMPONENTS = 1
 H_TOTAL = X_NPOINTS * Y_NPOINTS * Z_NPOINTS * H_COMPONENTS

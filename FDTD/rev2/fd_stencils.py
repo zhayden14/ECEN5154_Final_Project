@@ -31,12 +31,33 @@ def stencils_2d_free_space():
         "ex_pec_border": {"points": [(0, 0, 0, 0)], "values": [0.0]},
         # apply programmatically to Ey when node @-x is PEC
         "ey_pec_border": {"points": [(0, 0, 0, 0)], "values": [0.0]},
-        "ex_free": {"points": [(0, 0, 0, 0), (0, 1, 0, 0)], "values": [-0.5, 0.5]},
-        "ey_free": {"points": [(0, 0, -1, -1), (0, 0, 0, -1)], "values": [0.5, -0.5]},
+        "ex_free": {"points": [(0, 0, 0, 0), (0, -1, 0, 0)], "values": [0.5, -0.5]},
+        "ey_free": {"points": [(0, 0, 0, -1), (0, 0, -1, -1)], "values": [-0.5, 0.5]},
         "hz_free": {
-            "points": [(0, 0, 0, 0), (0, 1, 0, 0), (0, 0, -1, 1), (0, 0, 0, 1)],
-            "values": [-0.5, 0.5, 0.5, -0.5],
+            "points": [(0, 1, 0, 0), (0, 0, 0, 0), (0, 0, 1, 1), (0, 0, 0, 1)],
+            "values": [0.5, -0.5, -0.5, 0.5],
         },
+    }
+    names = []
+    stencils = []
+    extents = []
+    for name in definition.keys():
+        names.append(name)
+        stencil, extent = points_to_stencil(
+            definition[name]["points"], definition[name]["values"]
+        )
+        stencils.append(stencil)
+        extents.append(extent)
+
+    return names, stencils, extents
+
+
+def stencils_1d():
+    definition = {
+        "pec": {"points": [(0, 0, 0, 0)], "values": [0.0]},
+        "abc_1d_hz": {"points": [(0, -1, 0, 0)], "values": [1.0]},
+        "ex_free": {"points": [(0, 0, 0, 0), (0, -1, 0, 0)], "values": [-0.5, 0.5]},
+        "hz_free": {"points": [(0, 1, 0, 0), (0, 0, 0, 0)], "values": [0.5, -0.5]},
     }
     names = []
     stencils = []
