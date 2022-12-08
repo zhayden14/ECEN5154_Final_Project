@@ -31,11 +31,11 @@ def stencils_2d_free_space():
         "ex_pec_border": {"points": [(0, 0, 0, 0)], "values": [0.0]},
         # apply programmatically to Ey when node @-x is PEC
         "ey_pec_border": {"points": [(0, 0, 0, 0)], "values": [0.0]},
-        "ex_free": {"points": [(0, 0, 0, 0), (0, -1, 0, 0)], "values": [1, -1]},
-        "ey_free": {"points": [(0, 0, 0, -1), (0, 0, -1, -1)], "values": [-1, 1]},
+        "ex_free": {"points": [(0, 0, 0, 0), (0, -1, 0, 0)], "values": [0.5, -0.5]},
+        "ey_free": {"points": [(0, 0, 0, -1), (0, 0, -1, -1)], "values": [-0.5, 0.5]},
         "hz_free": {
             "points": [(0, 1, 0, 0), (0, 0, 0, 0), (0, 0, 1, 1), (0, 0, 0, 1)],
-            "values": [1, -1, -1, 1],
+            "values": [0.5, -0.5, -0.5, 0.5],
         },
     }
     names = []
