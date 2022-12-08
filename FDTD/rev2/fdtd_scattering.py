@@ -1,11 +1,13 @@
 #%% imports
 from functools import partial
+from datetime import datetime
 
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
+from matplotlib.animation import FuncAnimation, ImageMagickFileWriter, ImageMagickWriter
 
 import fd_lib, fdtd_solver, misc, fd_stencils, unsplit_pml
+
 
 #%% Mesh
 X_NPOINTS = 64
@@ -26,7 +28,7 @@ delta_x = 0.1
 # %% PML constants
 kappa_w = (4, 4, 4)
 a_w = (1e-8, 1e-8, 1e-8)
-cond_w = (2e-2, 2e-2, 2e-2)
+cond_w = (1e-2, 1e-2, 1e-2)
 
 b_w, c_w = unsplit_pml.pml_coefficients(
     a_w[0],
@@ -53,6 +55,47 @@ for extent in pml_extents:
 prev_count = len(stencil_names.keys())
 for idx, name in enumerate(pml_names):
     stencil_names[name] = prev_count + idx
+
+#%% PEC cylinder
+x = stencil_names["ex_free"]
+y = stencil_names["ey_free"]
+o = stencil_names["pec"]
+cylinder_ex = np.array(
+    [
+        [x, x, x, x, x, x, x, x, x, x, x, x, x, x],
+        [x, x, x, x, x, o, o, o, o, x, x, x, x, x],
+        [x, x, x, o, o, o, o, o, o, o, o, x, x, x],
+        [x, x, o, o, o, o, o, o, o, o, o, o, x, x],
+        [x, x, o, o, o, o, o, o, o, o, o, o, x, x],
+        [x, o, o, o, o, o, o, o, o, o, o, o, o, x],
+        [x, o, o, o, o, o, o, o, o, o, o, o, o, x],
+        [x, o, o, o, o, o, o, o, o, o, o, o, o, x],
+        [x, o, o, o, o, o, o, o, o, o, o, o, o, x],
+        [x, o, o, o, o, o, o, o, o, o, o, o, o, x],
+        [x, x, o, o, o, o, o, o, o, o, o, o, x, x],
+        [x, x, o, o, o, o, o, o, o, o, o, o, x, x],
+        [x, x, x, o, o, o, o, o, o, o, o, x, x, x],
+        [x, x, x, x, x, o, o, o, o, x, x, x, x, x],
+    ]
+)
+cylinder_ey = np.array(
+    [
+        [y, y, y, y, y, y, y, y, y, y, y, y, y, y],
+        [y, y, y, y, y, o, o, o, o, o, y, y, y, y],
+        [y, y, y, o, o, o, o, o, o, o, o, o, y, y],
+        [y, y, o, o, o, o, o, o, o, o, o, o, o, y],
+        [y, y, o, o, o, o, o, o, o, o, o, o, o, y],
+        [y, o, o, o, o, o, o, o, o, o, o, o, o, o],
+        [y, o, o, o, o, o, o, o, o, o, o, o, o, o],
+        [y, o, o, o, o, o, o, o, o, o, o, o, o, o],
+        [y, o, o, o, o, o, o, o, o, o, o, o, o, o],
+        [y, y, o, o, o, o, o, o, o, o, o, o, o, y],
+        [y, y, o, o, o, o, o, o, o, o, o, o, o, y],
+        [y, y, y, o, o, o, o, o, o, o, o, o, y, y],
+        [y, y, y, y, y, o, o, o, o, o, y, y, y, y],
+        [y, y, y, y, y, y, y, y, y, y, y, y, y, y],
+    ]
+)
 
 #%% start setting up variables
 # let's start with a 16x16 grid
@@ -100,7 +143,7 @@ h_lossless = [
 ]
 
 e_sources = np.zeros(e_shape, dtype=float)
-e_sources[0, 20, 16:-16, 0] = 1.0
+e_sources[0, 44, 16:-16, 0] = 1.0
 # e_sources[0, :, 4, 0] = 1.0
 # e_sources[0, int(Y_NPOINTS / 2), int(X_NPOINTS / 2), 0] = 1.0
 # e_sources[0, int(Y_NPOINTS / 2), int(X_NPOINTS / 2) + 1, 0] = -1.0
@@ -116,23 +159,25 @@ e_flag_matrix[0, 0, :, :] = stencil_names["pec"]
 e_flag_matrix[0, -1, :, :] = stencil_names["pec"]
 e_flag_matrix[0, :, 0, :] = stencil_names["pec"]
 e_flag_matrix[0, :, -1, :] = stencil_names["pec"]
-e_flag_matrix[0, 1:15, 1:-1, 0] = stencil_names["ex_pml"]
-e_flag_matrix[0, -15:-1, 1:-1, 0] = stencil_names["ex_pml"]
-e_flag_matrix[0, 1:-1, 1:15, 0] = stencil_names["ex_pml"]
-e_flag_matrix[0, 1:-1, -15:-1, 0] = stencil_names["ex_pml"]
-e_flag_matrix[0, 1:15, 1:-1, 1] = stencil_names["ey_pml"]
-e_flag_matrix[0, -15:-1, 1:-1, 1] = stencil_names["ey_pml"]
-e_flag_matrix[0, 1:-1, 1:15, 1] = stencil_names["ey_pml"]
-e_flag_matrix[0, 1:-1, -15:-1, 1] = stencil_names["ey_pml"]
+e_flag_matrix[0, 1:13, 1:-1, 0] = stencil_names["ex_pml"]
+e_flag_matrix[0, -13:-1, 1:-1, 0] = stencil_names["ex_pml"]
+e_flag_matrix[0, 1:-1, 1:13, 0] = stencil_names["ex_pml"]
+e_flag_matrix[0, 1:-1, -13:-1, 0] = stencil_names["ex_pml"]
+e_flag_matrix[0, 1:13, 1:-1, 1] = stencil_names["ey_pml"]
+e_flag_matrix[0, -13:-1, 1:-1, 1] = stencil_names["ey_pml"]
+e_flag_matrix[0, 1:-1, 1:13, 1] = stencil_names["ey_pml"]
+e_flag_matrix[0, 1:-1, -13:-1, 1] = stencil_names["ey_pml"]
+e_flag_matrix[0, 16:30, 24:38, 0] = cylinder_ex
+e_flag_matrix[0, 16:30, 24:38, 1] = cylinder_ey
 #
-e_flag_pml[0, 1:15, 1:-1, 0] = stencil_names["ex_pml_update"]
-e_flag_pml[0, -15:-1, 1:-1, 0] = stencil_names["ex_pml_update"]
-e_flag_pml[0, 1:-1, 1:15, 0] = stencil_names["ex_pml_update"]
-e_flag_pml[0, 1:-1, -15:-1, 0] = stencil_names["ex_pml_update"]
-e_flag_pml[0, 1:15, 1:-1, 1] = stencil_names["ey_pml_update"]
-e_flag_pml[0, -15:-1, 1:-1, 1] = stencil_names["ey_pml_update"]
-e_flag_pml[0, 1:-1, 1:15, 1] = stencil_names["ey_pml_update"]
-e_flag_pml[0, 1:-1, -15:-1, 1] = stencil_names["ey_pml_update"]
+e_flag_pml[0, 1:13, 1:-1, 0] = stencil_names["ex_pml_update"]
+e_flag_pml[0, -13:-1, 1:-1, 0] = stencil_names["ex_pml_update"]
+e_flag_pml[0, 1:-1, 1:13, 0] = stencil_names["ex_pml_update"]
+e_flag_pml[0, 1:-1, -13:-1, 0] = stencil_names["ex_pml_update"]
+e_flag_pml[0, 1:13, 1:-1, 1] = stencil_names["ey_pml_update"]
+e_flag_pml[0, -13:-1, 1:-1, 1] = stencil_names["ey_pml_update"]
+e_flag_pml[0, 1:-1, 1:13, 1] = stencil_names["ey_pml_update"]
+e_flag_pml[0, 1:-1, -13:-1, 1] = stencil_names["ey_pml_update"]
 
 h_flag_matrix[0, :, :, 0] = stencil_names["hz_free"]
 h_flag_matrix[0, 0, :, :] = stencil_names["pec"]
@@ -239,8 +284,8 @@ b_w_h = np.reshape(b_w_h, (E_TOTAL, 1))
 
 for i in range(1024):
     # def update(i):
-    if i < 17:
-        e_sources_vector = e_sources_amp_vector * np.sin(np.pi / 8 * i)
+    if i < 33:
+        e_sources_vector = e_sources_amp_vector * np.sin(np.pi / 16 * i)
     else:
         e_sources_vector = np.zeros_like(e_sources_vector)
     (
@@ -366,6 +411,45 @@ def update(e_data_vector, h_data_vector, e_data_delta, h_data_delta, i):
     # plt.show()
 
 
+#%% sum (array) - based RCS estimation
+rcs_array = [
+    data.reshape(Z_NPOINTS, Y_NPOINTS, X_NPOINTS, E_COMPONENTS)[0, 44, 16:-16, 0].sum()
+    for data in e_data_vector
+]
+
+#%% point(s) over time
+rcs_points_e = [(0, 44, 32, 0), (0, 44, 32, 0)]
+rcs_points_h = [(0, 44, 32, 0)]
+rcs_point_data = []
+for point in rcs_points_e:
+    rcs_point_data.append(
+        np.array(
+            [
+                data.reshape(Z_NPOINTS, Y_NPOINTS, X_NPOINTS, E_COMPONENTS)[point]
+                for data in e_data_vector
+            ]
+        )
+    )
+for point in rcs_points_h:
+    rcs_point_data.append(
+        np.array(
+            [
+                data.reshape(Z_NPOINTS, Y_NPOINTS, X_NPOINTS, H_COMPONENTS)[point]
+                for data in h_data_vector
+            ]
+        )
+    )
+
+# export rcs data
+np.savez(
+    f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_rcs.npz",
+    rcs_array=rcs_array,
+    rcs_points_e=rcs_points_e,
+    rcs_points_h=rcs_points_h,
+    rcs_point_data=rcs_point_data,
+)
+
+marlowe = ImageMagickFileWriter()
 animation = FuncAnimation(
     fig,
     partial(update, e_data_vector, h_data_vector, e_data_delta, h_data_delta),
@@ -373,6 +457,9 @@ animation = FuncAnimation(
     frames=1024,
     repeat=True,
 )
+# animation.save(
+#     f"outputs/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_cylinder.gif", marlowe
+# )
 plt.show()
 
 # %%
