@@ -282,7 +282,7 @@ b_w_h[:, :, :, 0] = -b_w[2]
 b_w_h[:, :, :, 1] = b_w[2]
 b_w_h = np.reshape(b_w_h, (E_TOTAL, 1))
 
-for i in range(1024):
+for i in range(256):
     # def update(i):
     if i < 33:
         e_sources_vector = e_sources_amp_vector * np.sin(np.pi / 16 * i)
@@ -413,13 +413,13 @@ def update(e_data_vector, h_data_vector, e_data_delta, h_data_delta, i):
 
 #%% sum (array) - based RCS estimation
 rcs_array = [
-    data.reshape(Z_NPOINTS, Y_NPOINTS, X_NPOINTS, E_COMPONENTS)[0, 44, 16:-16, 0].sum()
+    data.reshape(Z_NPOINTS, Y_NPOINTS, X_NPOINTS, E_COMPONENTS)[0, 40, 16:-16, 0].sum()
     for data in e_data_vector
 ]
 
 #%% point(s) over time
-rcs_points_e = [(0, 44, 32, 0), (0, 44, 32, 0)]
-rcs_points_h = [(0, 44, 32, 0)]
+rcs_points_e = [(0, 40, 32, 0), (0, 40, 32, 0)]
+rcs_points_h = [(0, 40, 32, 0)]
 rcs_point_data = []
 for point in rcs_points_e:
     rcs_point_data.append(
@@ -449,17 +449,177 @@ np.savez(
     rcs_point_data=rcs_point_data,
 )
 
-marlowe = ImageMagickFileWriter()
-animation = FuncAnimation(
-    fig,
-    partial(update, e_data_vector, h_data_vector, e_data_delta, h_data_delta),
+# # marlowe = ImageMagickFileWriter()
+# animation = FuncAnimation(
+#     fig,
+#     partial(update, e_data_vector, h_data_vector, e_data_delta, h_data_delta),
+#     interval=10,
+#     frames=16,
+#     repeat=True,
+# )
+# animation.save(f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_cylinder.gif")
+# plt.show()
+
+# %% 128-frame animation Ex
+fig_ex, axes_ex = plt.subplots(1, 1)
+pcm = axes_ex.pcolormesh(
+    np.zeros((1, 64, 64, 1))[0, :, :, 0],
+    cmap=plt.cm.twilight,
+    vmin=-2.0,
+    vmax=2.0,
+)
+fig_ex.colorbar(pcm, ax=axes_ex)
+axes_ex.set_xlabel("X position")
+axes_ex.set_ylabel("Y position")
+axes_ex.set_title("Ex Field Magnitude")
+
+
+def update_ex(e_data_vector, i):
+    i = (i * 4) % len(e_data_vector)
+    ax = axes_ex
+    pcm = ax.pcolormesh(
+        e_data_vector[i].reshape(1, Y_NPOINTS, X_NPOINTS, 2)[0, :, :, 0],
+        cmap=plt.cm.twilight,
+        vmin=-2.0,
+        vmax=2.0,
+    )
+    # fig.colorbar(pcm, ax=ax)
+    # ax.set_title(f"Ex Field Magnitude")
+
+
+animation_ex = FuncAnimation(
+    fig_ex,
+    partial(update_ex, e_data_vector),
     interval=10,
-    frames=1024,
+    frames=32,
     repeat=True,
 )
-# animation.save(
-#     f"outputs/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_cylinder.gif", marlowe
-# )
+animation_ex.save(f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_cylinder_ex.gif")
+# plt.show()
+
+# %% 128-frame animation Ex
+fig_ey, axes_ey = plt.subplots(1, 1)
+pcm = axes_ey.pcolormesh(
+    np.zeros((1, 64, 64, 1))[0, :, :, 0],
+    cmap=plt.cm.twilight,
+    vmin=-2.0,
+    vmax=2.0,
+)
+fig_ey.colorbar(pcm, ax=axes_ey)
+axes_ey.set_xlabel("X position")
+axes_ey.set_ylabel("Y position")
+axes_ey.set_title("Ey Field Magnitude")
+
+
+def update_ey(e_data_vector, i):
+    i = (i * 4) % len(e_data_vector)
+    ax = axes_ey
+    pcm = ax.pcolormesh(
+        e_data_vector[i].reshape(1, Y_NPOINTS, X_NPOINTS, 2)[0, :, :, 1],
+        cmap=plt.cm.twilight,
+        vmin=-2.0,
+        vmax=2.0,
+    )
+    # fig.colorbar(pcm, ax=ax)
+    # ax.set_title(f"Ex Field Magnitude")
+
+
+animation_ey = FuncAnimation(
+    fig_ey,
+    partial(update_ey, e_data_vector),
+    interval=10,
+    frames=32,
+    repeat=True,
+)
+animation_ey.save(f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_cylinder_ey.gif")
+# plt.show()
+
+# %% 128-frame animation Ex
+fig_hz, axes_hz = plt.subplots(1, 1)
+pcm = axes_hz.pcolormesh(
+    np.zeros((1, 64, 64, 1))[0, :, :, 0],
+    cmap=plt.cm.twilight,
+    vmin=-2.0,
+    vmax=2.0,
+)
+fig_hz.colorbar(pcm, ax=axes_hz)
+axes_hz.set_xlabel("X position")
+axes_hz.set_ylabel("Y position")
+axes_hz.set_title("Hz Field Magnitude")
+
+
+def update_hz(h_data_vector, i):
+    i = (i * 4) % len(h_data_vector)
+    ax = axes_hz
+    pcm = ax.pcolormesh(
+        h_data_vector[i].reshape(1, Y_NPOINTS, X_NPOINTS, 1)[0, :, :, 0],
+        cmap=plt.cm.twilight,
+        vmin=-2.0,
+        vmax=2.0,
+    )
+    # fig.colorbar(pcm, ax=ax)
+    # ax.set_title(f"Ex Field Magnitude")
+
+
+animation_hz = FuncAnimation(
+    fig_hz,
+    partial(update_hz, h_data_vector),
+    interval=10,
+    frames=32,
+    repeat=True,
+)
+animation_hz.save(f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_cylinder_hz.gif")
 plt.show()
 
-# %%
+#%% plot snapshots of simulations
+for i in range(0, 128, 4):
+    fig_ex_static, ax_ex_static = plt.subplots(1, 1)
+    fig_ey_static, ax_ey_static = plt.subplots(1, 1)
+    fig_hz_static, ax_hz_static = plt.subplots(1, 1)
+
+    pcm_ex = ax_ex_static.pcolormesh(
+        e_data_vector[i].reshape(1, Y_NPOINTS, X_NPOINTS, 2)[0, :, :, 0],
+        cmap=plt.cm.twilight,
+        vmin=-2.0,
+        vmax=2.0,
+    )
+    fig_hz_static.colorbar(pcm_ex, ax=ax_ex_static)
+    ax_ex_static.set_xlabel("X position")
+    ax_ex_static.set_ylabel("Y position")
+    ax_ex_static.set_title("Ex Field Magnitude")
+
+    pcm_ey = ax_ey_static.pcolormesh(
+        e_data_vector[i].reshape(1, Y_NPOINTS, X_NPOINTS, 2)[0, :, :, 1],
+        cmap=plt.cm.twilight,
+        vmin=-2.0,
+        vmax=2.0,
+    )
+    fig_hz_static.colorbar(pcm_ey, ax=ax_ey_static)
+    ax_ey_static.set_xlabel("X position")
+    ax_ey_static.set_ylabel("Y position")
+    ax_ey_static.set_title("Ey Field Magnitude")
+
+    pcm_hz = ax_hz_static.pcolormesh(
+        h_data_vector[i].reshape(1, Y_NPOINTS, X_NPOINTS, 1)[0, :, :, 0],
+        cmap=plt.cm.twilight,
+        vmin=-2.0,
+        vmax=2.0,
+    )
+    fig_hz_static.colorbar(pcm_hz, ax=ax_hz_static)
+    ax_hz_static.set_xlabel("X position")
+    ax_hz_static.set_ylabel("Y position")
+    ax_hz_static.set_title("Hz Field Magnitude")
+
+    fig_ex_static.savefig(
+        f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_frame_{i}_ex.png", dpi=100
+    )
+    fig_ey_static.savefig(
+        f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_frame_{i}_ey.png", dpi=100
+    )
+    fig_hz_static.savefig(
+        f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_frame_{i}_hz.png", dpi=100
+    )
+
+    plt.close(fig_ex_static)
+    plt.close(fig_ey_static)
+    plt.close(fig_hz_static)
