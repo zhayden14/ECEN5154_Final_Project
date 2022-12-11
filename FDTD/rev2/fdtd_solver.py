@@ -32,7 +32,8 @@ def step(
     b_w_e: np.ndarray,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
-    TODO: docstring
+    Updates the E and H fields, given previous E and H fields, sources, PML data and coefficients for application of
+    conduction currents
     """
     # # "equivalent" of system matrix, multiply this by other field to get source-free delta
     # update_h = np.zeros()

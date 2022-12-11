@@ -17,6 +17,7 @@ import numpy as np
 
 
 def points_to_stencil(points: List[tuple], values: List[tuple]):
+    """Generates a stencil and extents from a list of points and associated values"""
     # TODO: user-defined extents?
     # calculate extents
     extent_array = np.array([point for point in points])
@@ -34,6 +35,7 @@ def points_to_stencil(points: List[tuple], values: List[tuple]):
 
 
 def stencils_2d_free_space():
+    """Exports standard stencils for 2D space, with names and extents"""
     definition = {
         "pec": {"points": [(0, 0, 0, 0)], "values": [0.0]},
         # apply programmatically to Ex when node @-y is PEC
@@ -62,6 +64,7 @@ def stencils_2d_free_space():
 
 
 def stencils_1d():
+    """Exports standard stencils for 1D space, with names and extents"""
     definition = {
         "pec": {"points": [(0, 0, 0, 0)], "values": [0.0]},
         "abc_1d_ex": {"points": [(0, 1, 0, 0), (0, 0, 0, 0)], "values": [1, -1]},

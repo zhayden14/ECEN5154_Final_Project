@@ -12,9 +12,9 @@ from datetime import datetime
 
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation, ImageMagickFileWriter, ImageMagickWriter
+from matplotlib.animation import FuncAnimation
 
-import fd_lib, fdtd_solver, misc, fd_stencils, unsplit_pml
+import fd_lib, fdtd_solver, fd_stencils, unsplit_pml
 
 
 #%% Mesh
@@ -106,7 +106,6 @@ cylinder_ey = np.array(
 )
 
 #%% start setting up variables
-# let's start with a 16x16 grid
 
 """ indexing and calculation matrices"""
 e_index_matrix = fd_lib.node_index_matrix(e_shape)
@@ -132,15 +131,12 @@ h_flag_pml = np.zeros_like(e_flag_matrix)
 
 """physical values (more or less)"""
 e_fields = np.zeros(e_shape, dtype=float)
-# e_fields = misc.generate_gradient(e_shape, (0, 0, 1, 0))
-# e_fields[0, 8, 8, :] = 1.0
 h_fields = np.zeros(h_shape, dtype=float)
-# h_fields = misc.generate_gradient(h_shape, (0, 0, 2, 0))
-# h_fields[0, 8, 8, 0] = 1.0
 
 c_e = delta_t / (4e-6 * np.pi * delta_x)
 c_h = delta_t / (8.854e-12 * delta_x)
 
+# coefficients for E and H update given previous and delta
 e_lossless = [
     np.ones(e_shape, dtype=float).reshape((E_TOTAL, 1)),
     np.ones(e_shape, dtype=float).reshape((E_TOTAL, 1)),
@@ -150,6 +146,7 @@ h_lossless = [
     np.ones(h_shape, dtype=float).reshape((H_TOTAL, 1)),
 ]
 
+# source currents (mask)
 e_sources = np.zeros(e_shape, dtype=float)
 e_sources[0, 44, 16:-16, 0] = 1.0
 # e_sources[0, :, 4, 0] = 1.0
@@ -160,9 +157,6 @@ h_sources = np.zeros(h_shape, dtype=float)
 #%% apply flags manually for now
 e_flag_matrix[0, :, :, 0] = stencil_names["ex_free"]
 e_flag_matrix[0, :, :, 1] = stencil_names["ey_free"]
-# e_flag_matrix[0, int(Y_NPOINTS / 4) : int(Y_NPOINTS / 4) + 3, 6:10, :] = stencil_names[
-#     "pec"
-# ]
 e_flag_matrix[0, 0, :, :] = stencil_names["pec"]
 e_flag_matrix[0, -1, :, :] = stencil_names["pec"]
 e_flag_matrix[0, :, 0, :] = stencil_names["pec"]
@@ -196,7 +190,6 @@ h_flag_matrix[0, 1:15, 1:-1, 0] = stencil_names["hz_pml"]
 h_flag_matrix[0, -15:-1, 1:-1, 0] = stencil_names["hz_pml"]
 h_flag_matrix[0, 1:-1, 1:15, 0] = stencil_names["hz_pml"]
 h_flag_matrix[0, 1:-1, -15:-1, 0] = stencil_names["hz_pml"]
-
 #
 h_flag_pml[0, 1:15, 1:-1, 0] = stencil_names["hz_pml_x_update"]
 h_flag_pml[0, -15:-1, 1:-1, 0] = stencil_names["hz_pml_x_update"]
@@ -268,7 +261,7 @@ fd_lib.apply_stencil(
 )
 
 # %%
-# TODO: make this programmatic
+# reshape arrays to vectors for update
 e_field_vector = e_fields.reshape((E_TOTAL, 1))
 h_field_vector = h_fields.reshape((H_TOTAL, 1))
 e_pml_convolution = np.zeros_like(e_field_vector)
@@ -290,8 +283,9 @@ b_w_h[:, :, :, 0] = -b_w[2]
 b_w_h[:, :, :, 1] = b_w[2]
 b_w_h = np.reshape(b_w_h, (E_TOTAL, 1))
 
+# run 256 time steps of the simulation
 for i in range(256):
-    # def update(i):
+    # apply source currents for the first 32 time steps
     if i < 33:
         e_sources_vector = e_sources_amp_vector * np.sin(np.pi / 16 * i)
     else:
@@ -319,12 +313,14 @@ for i in range(256):
         b_w_h=b_w_h,
         b_w_e=b_w_e,
     )
+    # record data
     e_data_vector.append(e_field_vector)
     h_data_vector.append(h_field_vector)
     e_data_delta.append(e_delta)
     h_data_delta.append(h_delta)
+
+# plot all components and deltas on the same animated plot
 fig, axes = plt.subplots(2, 3)
-# fig, axes = plt.subplots(2, 3)
 # Ex
 def update(e_data_vector, h_data_vector, e_data_delta, h_data_delta, i):
     i = i % len(e_data_vector)
@@ -389,34 +385,17 @@ def update(e_data_vector, h_data_vector, e_data_delta, h_data_delta, i):
     ax.set_title(f"Hz Delta")
     # plt.show()
 
-    # plt.figure()
-    # plt.pcolormesh(
-    #     e_field_vector.reshape(1, 16, 16, 2)[0, :, :, 0],
-    #     cmap=plt.cm.turbo,
-    #     vmin=-2.0,
-    #     vmax=2.0,
-    # )
-    # plt.colorbar()
-    # plt.title(f"Ex Fields")
-    # plt.figure()
-    # plt.pcolormesh(
-    #     e_field_vector.reshape(1, 16, 16, 2)[0, :, :, 1],
-    #     cmap=plt.cm.turbo,
-    #     vmin=-2.0,
-    #     vmax=2.0,
-    # )
-    # plt.colorbar()
-    # plt.title(f"Ey Fields")
-    # plt.figure()
-    # plt.pcolormesh(
-    #     h_field_vector.reshape(1, 16, 16, 1)[0, :, :, 0],
-    #     cmap=plt.cm.turbo,
-    #     vmin=-2.0,
-    #     vmax=2.0,
-    # )
-    # plt.colorbar()
-    # plt.title(f"Hz Fields")
-    # plt.show()
+
+# NOTE: display of animation is slow. disable this one in favor of the individual animations later in the file
+# animation = FuncAnimation(
+#     fig,
+#     partial(update, e_data_vector, h_data_vector, e_data_delta, h_data_delta),
+#     interval=10,
+#     frames=16,
+#     repeat=True,
+# )
+# animation.save(f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_cylinder.gif")
+# plt.show()
 
 
 #%% sum (array) - based RCS estimation
@@ -457,16 +436,6 @@ np.savez(
     rcs_point_data=rcs_point_data,
 )
 
-# # marlowe = ImageMagickFileWriter()
-# animation = FuncAnimation(
-#     fig,
-#     partial(update, e_data_vector, h_data_vector, e_data_delta, h_data_delta),
-#     interval=10,
-#     frames=16,
-#     repeat=True,
-# )
-# animation.save(f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_cylinder.gif")
-# plt.show()
 
 # %% 128-frame animation Ex
 fig_ex, axes_ex = plt.subplots(1, 1)
@@ -505,7 +474,7 @@ animation_ex = FuncAnimation(
 animation_ex.save(f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_cylinder_ex.gif")
 # plt.show()
 
-# %% 128-frame animation Ex
+# %% 128-frame animation Ey
 fig_ey, axes_ey = plt.subplots(1, 1)
 pcm = axes_ey.pcolormesh(
     np.zeros((1, 64, 64, 1))[0, :, :, 0],
@@ -542,7 +511,7 @@ animation_ey = FuncAnimation(
 animation_ey.save(f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_cylinder_ey.gif")
 # plt.show()
 
-# %% 128-frame animation Ex
+# %% 128-frame animation Hz
 fig_hz, axes_hz = plt.subplots(1, 1)
 pcm = axes_hz.pcolormesh(
     np.zeros((1, 64, 64, 1))[0, :, :, 0],
@@ -579,7 +548,7 @@ animation_hz = FuncAnimation(
 animation_hz.save(f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}_cylinder_hz.gif")
 plt.show()
 
-#%% plot snapshots of simulations
+#%% plot snapshots of simulations (all frames - for use in paper)
 for i in range(0, 128, 4):
     fig_ex_static, ax_ex_static = plt.subplots(1, 1)
     fig_ey_static, ax_ey_static = plt.subplots(1, 1)

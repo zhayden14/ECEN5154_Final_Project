@@ -15,6 +15,7 @@ import fd_stencils
 def pml_coefficients(
     a_x, a_y, a_z, kappa_x, kappa_y, kappa_z, cond_x, cond_y, cond_z, delta_t
 ):
+    """Calculates coefficents for use in PML calculations"""
     EPSILON_0 = 8.854e-12
     # b_w terms
     b_x = np.exp(-((a_x / EPSILON_0) + (cond_x / EPSILON_0)) * delta_t)
@@ -29,7 +30,7 @@ def pml_coefficients(
 
 
 def pml_stencils_2d(c_w, kappa_w):
-
+    """Defines 2D stencils to generate finite differences for PML calculations"""
     c_x = c_w[0]
     c_y = c_w[1]
     c_z = c_w[2]
@@ -82,7 +83,7 @@ def pml_stencils_2d(c_w, kappa_w):
 
 
 def pml_stencils_1d(c_w, kappa_w):
-
+    """Defines 1D stencils to generate finite differences for PML calculations"""
     c_x = c_w[0]
     c_z = c_w[2]
     kappa_x = kappa_w[0]
@@ -121,16 +122,17 @@ def pml_stencils_1d(c_w, kappa_w):
     return names, stencils, extents
 
 
-# TODO: b_w must correctly apply same sign as c_w in stencil
 def update_pml_e(pml_stencil, pml_convolution, b_w, h):
-    # TODO: how to apply b_w correctly? create vector at top level
+    """Updates E-field convolution for PML calculations"""
+    # NOTE: create b_w vector at top level
     pml_convolution = (pml_stencil @ h) + (b_w * pml_convolution)
 
     return pml_convolution
 
 
 def update_pml_h(pml_stencil, pml_convolution, b_w, e):
-    # TODO: how to apply b_w correctly? create vector at top level
+    """Updates H-field convolution for PML calculations"""
+    # NOTE: create b_w vector at top level
     # NOTE: approximate e as 32-bit floats to reduce memory usage
     e_32 = np.array(e, dtype=np.float32)
     pml_convolution = (pml_stencil @ e_32) + (b_w * pml_convolution)
