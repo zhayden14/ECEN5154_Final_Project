@@ -1,3 +1,11 @@
+"""
+tfsf.py
+Zachary Hayden
+ECEN5154, Fall 2022
+
+Unfinished total-field/scattered-field boundary condition implementation 
+"""
+
 #%% imports
 from typing import List, Tuple
 import numpy as np

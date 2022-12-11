@@ -1,3 +1,11 @@
+"""
+fdtd_2d_scratchpad.py
+Zachary Hayden
+ECEN5154, Fall 2022
+
+2D simulation for testing/development of 2D wave propagation
+"""
+
 #%% imports
 from functools import partial
 

@@ -1,3 +1,12 @@
+"""
+fd_stencils.py
+Zachary Hayden
+ECEN5154, Fall 2022
+
+Functions to generate stencils. points_to_stencil creates a stencil from a list of points and values.
+The other functions define a standard set of stencils.
+"""
+
 # %%
 from typing import List
 import itertools

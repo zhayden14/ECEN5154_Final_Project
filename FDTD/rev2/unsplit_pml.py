@@ -1,3 +1,11 @@
+"""
+unsplit_pml.py
+Zachary Hayden
+ECEN5154, Fall 2022
+
+Perfectly matched layer implementation
+"""
+
 #%%
 import numpy as np
 
@@ -123,7 +131,7 @@ def update_pml_e(pml_stencil, pml_convolution, b_w, h):
 
 def update_pml_h(pml_stencil, pml_convolution, b_w, e):
     # TODO: how to apply b_w correctly? create vector at top level
-    # NOTE: approximate e as 32-bit floats
+    # NOTE: approximate e as 32-bit floats to reduce memory usage
     e_32 = np.array(e, dtype=np.float32)
     pml_convolution = (pml_stencil @ e_32) + (b_w * pml_convolution)
 

@@ -1,3 +1,12 @@
+"""
+fd_lib.py
+Zachary Hayden
+ECEN5154, Fall 2022
+
+Basic functionality for indexing into a system matrix 
+and populating a system matrix using stencils
+"""
+
 #%%
 from os import system
 from typing import List, Tuple

@@ -1,3 +1,12 @@
+"""
+fdtd_solver.py
+Zachary Hayden
+ECEN5154, Fall 2022
+
+FDTD update function. Calculates the next E and H field values 
+and applies sources and PML boundary condition.
+"""
+
 import numpy as np
 
 from typing import List, Tuple

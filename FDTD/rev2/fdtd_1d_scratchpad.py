@@ -1,3 +1,11 @@
+"""
+fdtd_1d_scratchpad.py
+Zachary Hayden
+ECEN5154, Fall 2022
+
+1D simulation to test stencils and PML for TFSF use
+"""
+
 #%% imports
 from functools import partial
 

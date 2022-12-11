@@ -1,3 +1,11 @@
+"""
+fd_scattering.py
+Zachary Hayden
+ECEN5154, Fall 2022
+
+Main 2D simulation for scattering off an infinite PEC cylinder
+"""
+
 #%% imports
 from functools import partial
 from datetime import datetime
